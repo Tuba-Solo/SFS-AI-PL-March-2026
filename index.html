@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative AI Integration | EIPS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0B0F19;
+            --bg-surface: #1A2235;
+            --bg-surface-hover: #252F48;
+            --text-main: #F3F4F6;
+            --text-muted: #9CA3AF;
+            --accent-primary: #3B82F6;
+            --accent-secondary: #10B981;
+            --accent-warning: #F59E0B;
+            --accent-danger: #EF4444;
+            --accent-purple: #8B5CF6;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SVG Icon Helpers */
+        .svg-icon {
+            stroke: currentColor;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            display: inline-block;
+        }
+        
+        .card-icon .svg-icon { width: 3.5rem; height: 3.5rem; stroke-width: 1.5; }
+        .flip-card.short .card-icon .svg-icon { width: 2.5rem; height: 2.5rem; }
+        .use-case-icon .svg-icon { width: 2.2rem; height: 2.2rem; stroke: var(--accent-primary); }
+        .orch-icon .svg-icon { width: 2.5rem; height: 2.5rem; }
+
+        /* Sidebar Navigation */
+        #sidebar {
+            width: var(--sidebar-width);
+            background-color: #06090F;
+            border-right: 1px solid #1F2937;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .brand {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            font-weight: 600;
+        }
+
+        .brand span {
+            color: var(--accent-primary);
+        }
+
+        #nav-items-container {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        #nav-items-container::-webkit-scrollbar { width: 4px; }
+        #nav-items-container::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+
+        .nav-item {
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover { background-color: var(--bg-surface); color: var(--text-main); }
+        .nav-item.active { background-color: var(--bg-surface); color: var(--text-main); border-left: 3px solid var(--accent-primary); }
+
+        /* Main Slide Area */
+        #main-content {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem 4rem;
+            overflow-y: auto;
+        }
+
+        #slide-counter {
+            position: absolute;
+            top: 2rem;
+            right: 3rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            background: var(--bg-surface);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            z-index: 20;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .slide.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #9CA3AF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 { font-size: 2.8rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--text-main); }
+        .subtitle { font-size: 1.2rem; color: var(--accent-primary); margin-bottom: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; }
+        p.large { font-size: 1.4rem; color: var(--text-muted); line-height: 1.6; max-width: 900px; }
+
+        /* Grid Layouts & Cards */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 2rem; }
+        
+        .card-base {
+            background: var(--bg-surface);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid #2D3748;
+        }
+
+        /* Agenda Timeline */
+        .agenda-timeline { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem 3rem; margin-top: 2rem; }
+        .agenda-step { display: flex; align-items: center; gap: 1.2rem; background: #161B22; padding: 1.2rem 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-primary); transition: transform 0.2s, background 0.2s; }
+        .agenda-step:hover { transform: translateX(5px); background: var(--bg-surface); }
+        .agenda-step .step-num { font-family: 'Fira Code', monospace; color: var(--accent-primary); font-size: 1.5rem; font-weight: 800; opacity: 0.8; }
+        .agenda-step .step-text { font-size: 1.2rem; font-weight: 600; color: var(--text-main); }
+
+        /* Bar Chart for Survey Data */
+        .bar-chart-container { margin-top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+        .bar-row { display: flex; align-items: center; gap: 1rem; }
+        .bar-label { width: 220px; font-size: 1.1rem; font-weight: 500; color: var(--text-muted); text-align: right; }
+        .bar-track { flex: 1; height: 28px; background: #0F1523; border-radius: 14px; overflow: hidden; border: 1px solid #1F2937; }
+        .bar-fill { height: 100%; display: flex; align-items: center; padding-left: 1rem; font-family: 'Fira Code', monospace; font-size: 0.9rem; font-weight: 600; color: #000; }
+        .fill-danger { background: var(--accent-danger); width: 91%; }
+        .fill-warning { background: var(--accent-warning); width: 55%; }
+        .fill-primary { background: var(--accent-primary); width: 27%; }
+        .fill-secondary { background: var(--accent-secondary); width: 18%; }
+
+        /* Use Cases List */
+        .use-case-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
+        .use-case-item { background: #161B22; border-left: 4px solid var(--accent-primary); padding: 1.5rem; border-radius: 0 12px 12px 0; font-size: 1.2rem; color: var(--text-main); display: flex; align-items: center; gap: 1.2rem;}
+
+        /* Quotes & Blockquotes styling */
+        .quote-card { background: #161B22; border-left: 4px solid var(--accent-primary); padding: 1.5rem; border-radius: 0 12px 12px 0; font-style: italic; color: var(--text-muted); margin-bottom: 1rem; font-size: 1.1rem; }
+        .massive-quote { font-size: 3rem; font-weight: 800; line-height: 1.2; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin: 2rem 0; }
+
+        /* Interactive: Flip Cards (Tools & 4Ps) */
+        .flip-card { background-color: transparent; height: 380px; perspective: 1000px; cursor: pointer; }
+        .flip-card.short { height: 240px; }
+        .flip-card.tall { height: 420px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #2D3748; }
+        
+        .flip-card-front { background: var(--bg-surface); }
+        .flip-card-front h3 { font-size: 1.6rem; margin-top: 1rem; color: var(--text-main); }
+        .flip-card.short .flip-card-front h3 { font-size: 1.3rem; margin-top: 0.5rem; }
+        
+        .flip-card-back { background: linear-gradient(135deg, var(--bg-surface-hover), #1E3A8A); transform: rotateY(180deg); border: 1px solid var(--accent-primary); }
+        .flip-card-back h3 { font-size: 1.4rem; margin-bottom: 1rem; color: var(--accent-primary); }
+        .flip-card-back p { font-size: 1.05rem; color: rgba(255,255,255,0.95); line-height: 1.5; }
+        .flip-card.short .flip-card-back p { font-size: 0.95rem; }
+
+        .card-icon { font-size: 3.5rem; }
+
+        .flip-card-front.beginner { border-top: 4px solid var(--accent-secondary); }
+        .flip-card-front.intermediate { border-top: 4px solid var(--accent-warning); }
+        .flip-card-front.advanced { border-top: 4px solid var(--accent-danger); }
+        
+        /* List inside next steps flip back */
+        .ul-steps { text-align: left; padding-left: 1.2rem; margin-top: 0.5rem; list-style-type: square; }
+        .ul-steps li { margin-bottom: 0.75rem; font-size: 0.9rem; line-height: 1.4; color: rgba(255,255,255,0.9); }
+
+        /* Interactive: Prompt Terminal */
+        .prompt-engine { background: #0D1117; border-radius: 12px; border: 1px solid #30363D; overflow: hidden; margin-top: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .prompt-header { background: #161B22; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363D; }
+        .prompt-tabs { display: flex; gap: 0.5rem; }
+        .prompt-tab { color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; transition: all 0.2s; }
+        .prompt-tab:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .prompt-tab.active { color: var(--bg-base); }
+        .tab-weak.active { background: var(--accent-danger); }
+        .tab-adequate.active { background: var(--accent-warning); }
+        .tab-strong.active { background: var(--accent-secondary); }
+
+        .copy-btn { background: var(--bg-surface-hover); color: var(--text-main); border: 1px solid #30363D; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s; }
+        .copy-btn:hover { background: #30363D; }
+        .copy-btn.copied { background: var(--accent-secondary); color: #000; border-color: var(--accent-secondary); }
+
+        .prompt-body { position: relative; }
+        
+        .prompt-content { 
+            display: none; 
+            padding: 1.5rem; 
+            font-family: 'Fira Code', monospace; 
+            font-size: 1.05rem; 
+            line-height: 1.5; 
+            color: #E6EDF3; 
+            white-space: pre-wrap; 
+            max-height: 35vh; 
+            overflow-y: auto; 
+        }
+        
+        /* Custom scrollbar for prompt terminal */
+        .prompt-content::-webkit-scrollbar { width: 8px; }
+        .prompt-content::-webkit-scrollbar-track { background: #0D1117; }
+        .prompt-content::-webkit-scrollbar-thumb { background: #30363D; border-radius: 4px; }
+        .prompt-content::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+
+        .prompt-content.active { display: block; }
+        
+        .hl-prepare { color: #A5D6FF; } 
+        .hl-prime { color: #7EE787; }   
+        .hl-partner { color: #FF7B72; } 
+        .hl-polish { color: #D2A8FF; }  
+
+        /* UDL Interactive Cards - Reformatted */
+        .udl-card { background: var(--bg-surface); border-radius: 12px; border: 1px solid #2D3748; overflow: hidden; cursor: pointer; transition: border-color 0.2s; }
+        .udl-card:hover { border-color: var(--text-muted); }
+        .udl-card-header { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; align-items: flex-start; }
+        .udl-card-header h4 { margin-bottom: 0.5rem; font-size: 1.1rem; }
+        .udl-card-header p { font-size: 0.9rem; line-height: 1.4; margin-bottom: 0; color: var(--text-main); }
+        
+        .udl-alignments { max-height: 0; opacity: 0; transition: all 0.4s ease-out; padding: 0 1.5rem; background: #0F1523; font-size: 0.9rem; overflow: hidden; text-align: left; }
+        .udl-card.expanded .udl-alignments { max-height: 600px; opacity: 1; padding: 1rem 1.5rem 1.2rem 1.5rem; border-top: 1px solid #2D3748; }
+        
+        .udl-bullet { margin-bottom: 0.6rem; line-height: 1.3; color: var(--text-muted); font-size: 0.85rem; }
+        .udl-bullet:last-child { margin-bottom: 0; }
+        .udl-bullet strong { color: var(--text-main); display: inline; margin-right: 0.25rem; font-weight: 600; }
+
+        /* Orchestration Workflow Diagram */
+        .orchestration-flow { display: flex; align-items: stretch; justify-content: space-between; gap: 0.5rem; margin-top: 3rem; }
+        .orchestration-node { background: #0D1117; border: 2px solid #30363D; padding: 1.2rem 0.8rem; border-radius: 12px; width: 18%; text-align: center; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
+        .orchestration-node:hover { transform: translateY(-5px); }
+        .orch-icon { margin-bottom: 0.5rem; }
+        .orch-title { font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; font-size: 0.95rem; }
+        .orch-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
+        .orchestration-arrow { color: var(--text-muted); font-size: 1.2rem; font-weight: bold; display: flex; align-items: center;}
+
+        /* Drag and Drop Workflow */
+        .workflow-board { display: flex; gap: 2rem; margin-top: 2rem; align-items: center; justify-content: center; }
+        .draggables-sidebar { display: flex; flex-direction: column; gap: 1rem; background: var(--bg-surface); padding: 1.5rem; border-radius: 12px; border: 1px dashed #374151; min-width: 250px;}
+        .drag-item { background: #252F48; padding: 1rem; border-radius: 8px; cursor: grab; font-weight: 600; text-align: center; border: 2px solid transparent; font-size: 0.9rem; color: white; }
+        .drag-item:active { cursor: grabbing; }
+        .drag-item[data-type="trigger"] { border-left: 4px solid var(--accent-warning); }
+        .drag-item[data-type="ai"] { border-left: 4px solid var(--accent-primary); }
+        .drag-item[data-type="action"] { border-left: 4px solid var(--accent-secondary); }
+
+        .drop-zones { display: flex; gap: 1rem; align-items: center; }
+        .drop-zone { width: 220px; height: 120px; border: 2px dashed #4B5563; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.3s; }
+        .drop-zone .step-num { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+        .drop-zone.drag-over { background: rgba(59, 130, 246, 0.1); border-color: var(--accent-primary); }
+        .drop-zone.filled { border-style: solid; background: var(--bg-surface); }
+        .arrow { color: #4B5563; font-size: 1.5rem; }
+
+        /* Vibe Coding Inline Explanation (Replaces floating toast) */
+        #workflow-explanation {
+            margin-top: 2.5rem;
+            min-height: 140px;
+            background: #0F1523;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 1.5rem 2.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #workflow-explanation.show {
+            opacity: 1;
+        }
+        .expl-icon { font-size: 3rem; }
+        .expl-text-container { text-align: left; }
+        .expl-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;}
+        .expl-desc { font-size: 1.15rem; color: var(--text-muted); line-height: 1.5; }
+
+        /* Misc Utilities */
+        .stat-card { text-align: center; }
+        .stat-card h4 { font-size: 1.1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.5rem; }
+        .stat-card .big-text { font-size: 2.5rem; color: var(--accent-primary); font-weight: 800; line-height: 1.2; }
+        
+        .procedure-list { list-style: none; counter-reset: my-counter; margin-top: 1.5rem; }
+        .procedure-list li { counter-increment: my-counter; margin-bottom: 1.5rem; padding-left: 4rem; position: relative; font-size: 1.2rem; line-height: 1.5; }
+        .procedure-list li::before { content: counter(my-counter); position: absolute; left: 0; top: -2px; width: 36px; height: 36px; background: var(--accent-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Sidebar -->
+    <nav id="sidebar">
+        <div class="brand">EIPS <span>//</span> AI Integration</div>
+        <div id="nav-items-container">
+            <!-- Nav items injected via JS -->
+        </div>
+    </nav>
+
+    <!-- Main Presentation Area -->
+    <main id="main-content">
+        <div id="slide-counter">1/10</div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 1: AGENDA                          -->
+        <!-- ========================================== -->
+        
+        <div class="slide active" data-chapter="1">
+            <div class="subtitle">Professional Learning Session</div>
+            <h1>Generative AI<br>Integration</h1>
+            <p class="large">Supports for Students | March 4, 2026</p>
+        </div>
+
+        <div class="slide" data-chapter="1">
+            <div class="subtitle">Roadmap</div>
+            <h2>Session Agenda</h2>
+            
+            <div class="agenda-timeline">
+                <div class="agenda-step">
+                    <span class="step-num">01</span>
+                    <span class="step-text">The Landscape</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">02</span>
+                    <span class="step-text">Governance & AP 142</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">03</span>
+                    <span class="step-text">Approved Tools</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">04</span>
+                    <span class="step-text">The 4P Framework</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">05</span>
+                    <span class="step-text">Live Demos</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">06</span>
+                    <span class="step-text">Multimodal & UDL</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">07</span>
+                    <span class="step-text">Research & RAG</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">08</span>
+                    <span class="step-text">Vibe Coding & Agents</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">09</span>
+                    <span class="step-text">Orchestrating AI</span>
+                </div>
+                <div class="agenda-step">
+                    <span class="step-num">10</span>
+                    <span class="step-text">Next Steps</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 2: THE LANDSCAPE                   -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="2">
+            <div class="subtitle">Pre-Session Survey Insights</div>
+            <h2>The Reality of Adoption</h2>
+            <p class="large" style="margin-bottom: 2rem;">Analysis of your pre-session feedback reveals a fascinating divide in how AI impacts our daily workflows.</p>
+
+            <div class="grid-2">
+                <div class="card-base" style="border-top: 4px solid var(--accent-primary);">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem; font-size: 1.2rem;">The Efficiency Paradox</h4>
+                    <p style="color: var(--text-main); font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">
+                        Colleagues using AI daily report <b>significant increases in operational efficiency</b>. 
+                    </p>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; border-top: 1px solid #2D3748; padding-top: 1rem;">
+                        Conversely, occasional users report decreased efficiency. This is the learning curve—treating AI like Google search yields poor results and costs more time than it saves.
+                    </p>
+                </div>
+                <div class="card-base" style="border-top: 4px solid var(--accent-secondary);">
+                    <h4 style="color: var(--accent-secondary); margin-bottom: 0.5rem; font-size: 1.2rem;">The Confidence Gap</h4>
+                    <p style="color: var(--text-main); font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">
+                        High confidence is directly correlated with using AI for <b>targeted, specific tasks</b> (like resource adaptation) rather than open-ended tasks.
+                    </p>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; border-top: 1px solid #2D3748; padding-top: 1rem;">
+                        Anxiety surrounding ethics and accuracy is highest among those who have not yet established a formal framework for prompting.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="2">
+            <div class="subtitle">Pre-Session Survey Insights</div>
+            <h2>Primary AI Use Cases</h2>
+            <p class="large">How your peers are currently leveraging these tools in their daily workflows:</p>
+            
+            <div class="use-case-list">
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    </div>
+                    <div><b>Drafting & Editing:</b> Written communications, parent emails, and newsletters.</div>
+                </div>
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+                    </div>
+                    <div><b>Brainstorming:</b> Generating ideas for lessons, interventions, and presentations.</div>
+                </div>
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v6h6"/></svg>
+                    </div>
+                    <div><b>Resource Adaptation:</b> Summarizing documents and modifying text complexity.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="2">
+            <div class="subtitle">Pre-Session Survey Insights</div>
+            <h2>Your Top Concerns</h2>
+            <p class="large">We hear your hesitations. They are valid, rational, and addressed by policy.</p>
+            
+            <div class="bar-chart-container">
+                <div class="bar-row">
+                    <div class="bar-label">Accuracy & Reliability</div>
+                    <div class="bar-track"><div class="bar-fill fill-danger">91%</div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-label">Privacy & Confidentiality</div>
+                    <div class="bar-track"><div class="bar-fill fill-warning">55%</div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-label">Ethics & Systemic Bias</div>
+                    <div class="bar-track"><div class="bar-fill fill-primary">27%</div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-label">Cognitive Offloading</div>
+                    <div class="bar-track"><div class="bar-fill fill-secondary">18%</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 3: GOVERNANCE & AP 142             -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="3">
+            <div class="subtitle">Governance & Ethics</div>
+            <h2>Administrative Procedure 142</h2>
+            <p class="large" style="margin-bottom: 2rem;">Establishing parameters for safe, ethical, and effective utilization of AI in EIPS.</p>
+
+            <div class="grid-3">
+                <div class="card-base" style="border-top: 4px solid var(--accent-warning);">
+                    <h4 style="color: var(--accent-warning); margin-bottom: 1rem; font-size: 1.2rem;">1. Data Privacy</h4>
+                    <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.5;">
+                        <b>Administrative Procedure 142 prohibits the input of Personally Identifiable Information (PII)</b> into public AI models. Pseudonyms and general descriptors are required to sanitize data.
+                    </p>
+                </div>
+                <div class="card-base" style="border-top: 4px solid var(--accent-danger);">
+                    <h4 style="color: var(--accent-danger); margin-bottom: 1rem; font-size: 1.2rem;">2. Accuracy & Accountability</h4>
+                    <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.5;">
+                        <b>AI models can hallucinate.</b> Professionals remain accountable for the output and are required to verify it for accuracy, reliability, and lack of bias.
+                    </p>
+                </div>
+                <div class="card-base" style="border-top: 4px solid var(--accent-primary);">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 1rem; font-size: 1.2rem;">3. Cognitive Offloading</h4>
+                    <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.5;">
+                        <b>AI is designed to augment professional judgment.</b> It does not replace pedagogical decision-making or the evaluation of student learning.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="3">
+            <div class="subtitle">Connecting Policy to Practice</div>
+            <h2>Answering Your Survey Questions</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="quote-card">"What information should you or should you not share when interacting with AI?"</div>
+                    <p style="color: var(--accent-secondary); font-weight: 600; font-size: 1.1rem; padding-left: 1rem;">Answer: AP 142 Section 2</p>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; padding-left: 1rem;">Strict prohibition of any Personally Identifiable Information (PII) regarding staff or students.</p>
+                </div>
+                <div>
+                    <div class="quote-card">"What are the optics of using AI? It feels like cheating on some levels."</div>
+                    <p style="color: var(--accent-secondary); font-weight: 600; font-size: 1.1rem; padding-left: 1rem;">Answer: Academic Integrity Framework</p>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; padding-left: 1rem;">Using an intern to draft is not cheating if the professional rigorously reviews, edits, and takes final ownership of the output.</p>
+                </div>
+                <div style="grid-column: span 2;">
+                    <div class="quote-card">"Are there any AI tools that will not store or share any information that I put in?"</div>
+                    <p style="color: var(--accent-secondary); font-weight: 600; font-size: 1.1rem; padding-left: 1rem;">Answer: Yes. Enterprise-Protected Tools.</p>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; padding-left: 1rem;">When logged in with EIPS credentials, specific approved tools guarantee your data is isolated and never used to train base models.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 4: APPROVED TOOLS                  -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="4">
+            <div class="subtitle">EIPS Ecosystem</div>
+            <h2>Approved AI Tools</h2>
+            <p class="large">Leveraging enterprise-grade applications secured for division use. Click to flip.</p>
+            
+            <div class="grid-4">
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:var(--text-main);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+                            </div>
+                            <h3>Google Gemini</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3>Gemini</h3>
+                            <p>Primary conversational agent.<br><br>Excellent for drafting communications, brainstorming ideas, and rapidly adapting text complexity.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:var(--text-main);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+                            </div>
+                            <h3>MS Copilot</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3>Copilot</h3>
+                            <p>Enterprise data protection.<br><br>Great for web-grounded search, image generation, and deep integration with Office products.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:var(--text-main);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                            </div>
+                            <h3>NotebookLM</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3>NotebookLM</h3>
+                            <p>Source-grounded synthesis (RAG).<br><br>Upload your PDFs and query them without hallucination. Generates audio podcasts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:var(--text-main);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><path d="m10.3 21.8-1.4-1.4"/><path d="m15.2 21.8 1.4-1.4"/><path d="m21.8 15.2-1.4-1.4"/><path d="M12 22v-2"/><path d="m8.8 21.8 1.4-1.4"/><path d="M22 12h-2"/><path d="m21.8 10.3-1.4 1.4"/><path d="m21.8 8.8-1.4 1.4"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0Z"/></svg>
+                            </div>
+                            <h3>Adobe Firefly</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3>Firefly</h3>
+                            <p>Commercially safe multimodal generation.<br><br>Create custom images, vectors, and design elements safely.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 5: THE 4P FRAMEWORK                -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="5">
+            <div class="subtitle">The Mindset Shift</div>
+            <h2>Reframing the Technology</h2>
+            
+            <div class="massive-quote">"AI is a smart intern,<br>not Gandalf."</div>
+
+            <div class="grid-2">
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); padding: 1.5rem; border-radius: 12px;">
+                    <h4 style="color: var(--accent-danger); font-size: 1.2rem; margin-bottom: 0.5rem;">The Magic Paradigm</h4>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">Typing a vague prompt and expecting instant brilliance with minimal review often results in generic output, hallucinated facts, and professional risk.</p>
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-secondary); padding: 1.5rem; border-radius: 12px;">
+                    <h4 style="color: var(--accent-secondary); font-size: 1.2rem; margin-bottom: 0.5rem;">The Thought Partner Paradigm</h4>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">Engaging intentionally, supplying deep context, iterating, and applying professional judgment typically results in high-quality, curriculum-aligned resources that save hours.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="5">
+            <div class="subtitle">AI as a Thought Partner</div>
+            <h2>The 4P Prompting Framework</h2>
+            <p class="large">A repeatable cycle for instructing your "intern". Click cards to reveal.</p>
+            
+            <div class="grid-4" style="margin-top: 1.5rem;">
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:#A5D6FF;">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                            </div>
+                            <h3>Prepare</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:#A5D6FF;">Prepare</h3>
+                            <p>Clarify purpose, success criteria, and constraints before you prompt.<br><br><i>What do you need? What is off-limits?</i></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:#7EE787;">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/></svg>
+                            </div>
+                            <h3>Prime</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:#7EE787;">Prime</h3>
+                            <p>Give the model the context it lacks.<br><br><i>Describe your role, learner needs, or paste source texts.</i></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:#FF7B72;">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </div>
+                            <h3>Partner</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:#FF7B72;">Partner</h3>
+                            <p>Ask the AI to co-create, iterate, or challenge your thinking.<br><br><i>"Draft three options..." or "Act as a critical friend..."</i></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:#D2A8FF;">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                            </div>
+                            <h3>Polish</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:#D2A8FF;">Polish</h3>
+                            <p>Refine output, check for bias, and align with curriculum.<br><br><i>"Adjust this for an equity lens..."</i></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 6: LIVE DEMONSTRATIONS             -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="6">
+            <div class="subtitle">Live Demo 1</div>
+            <h2>Drafting Communications</h2>
+            
+            <div class="prompt-engine">
+                <div class="prompt-header">
+                    <div class="prompt-tabs">
+                        <button class="prompt-tab tab-weak active" onclick="switchTab(this, 1, 'weak')">Weak</button>
+                        <button class="prompt-tab tab-adequate" onclick="switchTab(this, 1, 'adequate')">Adequate</button>
+                        <button class="prompt-tab tab-strong" onclick="switchTab(this, 1, 'strong')">Strong (4P)</button>
+                    </div>
+                    <button class="copy-btn" onclick="copyPrompt(1)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy
+                    </button>
+                </div>
+                <div class="prompt-body">
+                    <div id="content-1-weak" class="prompt-content active">Write an email to parents about the field trip.</div>
+                    <div id="content-1-adequate" class="prompt-content">Write a friendly email to Grade 6 parents about the field trip to the Science Center next Tuesday. Remind them about the $10 fee.</div>
+                    <div id="content-1-strong" class="prompt-content"><span class="hl-prepare">[Prepare] I need to write an email to parents outlining the details for our upcoming field trip to the TELUS World of Science. The tone should be enthusiastic but clear.</span> 
+<span class="hl-prime">[Prime] I am a Grade 6 teacher at Elk Island Public Schools. Date: Next Tuesday. Time: Leave 8:30am, Return 2:45pm. Fee: $10 via PowerSchool.</span> 
+<span class="hl-partner">[Partner] Draft the email using short paragraphs and bullet points for the logistics. Provide two subject line options.</span> 
+<span class="hl-polish">[Polish] Ensure the language is accessible for EAL families and reminds parents to pack a nut-free lunch.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="6">
+            <div class="subtitle">Live Demo 2</div>
+            <h2>Lesson Design & Co-Creation</h2>
+            
+            <div class="prompt-engine">
+                <div class="prompt-header">
+                    <div class="prompt-tabs">
+                        <button class="prompt-tab tab-weak active" onclick="switchTab(this, 2, 'weak')">Weak</button>
+                        <button class="prompt-tab tab-adequate" onclick="switchTab(this, 2, 'adequate')">Adequate</button>
+                        <button class="prompt-tab tab-strong" onclick="switchTab(this, 2, 'strong')">Strong (4P)</button>
+                    </div>
+                    <button class="copy-btn" onclick="copyPrompt(2)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy
+                    </button>
+                </div>
+                <div class="prompt-body">
+                    <div id="content-2-weak" class="prompt-content active">Make a lesson plan about Ancient Athens for Grade 6.</div>
+                    <div id="content-2-adequate" class="prompt-content">Write a 70-minute lesson plan for Grade 6 Social Studies about Athenian direct democracy. Include an engaging activity.</div>
+                    <div id="content-2-strong" class="prompt-content"><span class="hl-prepare">[Prepare] I am an Alberta Grade 6 Social Studies teacher. I need a lesson aligned with the provincial curriculum focusing on democratic principles.</span> 
+<span class="hl-prime">[Prime] Resources to incorporate: excerpts on Athenian direct democracy (citizens/metics/slaves, lottery, debate, secret ballots), and Canadian parliamentary structure for comparison.</span> 
+<span class="hl-partner">[Partner] Design a 70-min, student-centred lesson that: 1) launches with guiding question 'How can history provide insight into modern democracies?'; 2) uses jigsaw groups; 3) culminates in a Socratic seminar creating a Venn diagram of ancient vs. Canadian principles; 4) embeds a competency-based rubric.</span> 
+<span class="hl-polish">[Polish] Provide equity checks (gender/exclusion in ancient Athens), Indigenous perspectives, adaptations (visual supports), and a 3-question exit reflection. Output in table form.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="6">
+            <div class="subtitle">Live Demo 3</div>
+            <h2>Individualized Programming (IEPs)</h2>
+            
+            <div class="prompt-engine">
+                <div class="prompt-header">
+                    <div class="prompt-tabs">
+                        <button class="prompt-tab tab-weak active" onclick="switchTab(this, 3, 'weak')">Weak</button>
+                        <button class="prompt-tab tab-adequate" onclick="switchTab(this, 3, 'adequate')">Adequate</button>
+                        <button class="prompt-tab tab-strong" onclick="switchTab(this, 3, 'strong')">Strong (4P)</button>
+                    </div>
+                    <button class="copy-btn" onclick="copyPrompt(3)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy
+                    </button>
+                </div>
+                <div class="prompt-body">
+                    <div id="content-3-weak" class="prompt-content active">Write an IEP goal for reading.</div>
+                    <div id="content-3-adequate" class="prompt-content">Write a SMART goal for a Grade 4 student who struggles with reading comprehension and needs to improve over the next 3 months.</div>
+                    <div id="content-3-strong" class="prompt-content"><span class="hl-prepare">[Prepare] I am an Inclusive Education Consultant. I need to draft a SMART goal for an Individualized Program Plan (IPP).</span> 
+<span class="hl-prime">[Prime] The student is in Grade 4, currently reads at a mid-Grade 2 level, and specifically struggles with identifying the main idea and supporting details in non-fiction texts.</span> 
+<span class="hl-partner">[Partner] Generate 3 distinct options for a SMART goal focusing on reading comprehension. For each goal option, provide 2 targeted instructional strategies I can share with the classroom teacher.</span> 
+<span class="hl-polish">[Polish] Ensure the language is strength-based, explicitly measurable, and easily understood by parents without heavy clinical jargon.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 7: MULTIMODAL AI & UDL             -->
+        <!-- ========================================== -->
+        
+        <div class="slide" data-chapter="7">
+            <div class="subtitle">Core Concepts</div>
+            <h2>Understanding Multimodality</h2>
+            <p class="large" style="margin-bottom: 2rem;">AI is no longer just a text-based chatbot. It can process and generate across multiple modes of communication. Click to flip.</p>
+
+            <div class="grid-3">
+                 <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:var(--accent-warning);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </div>
+                            <h3>Vision</h3>
+                            <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">(Image-to-Text)</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:var(--accent-warning);">Vision</h3>
+                            <p>AI can "see". You can upload a photo of a handwritten math problem or a complex diagram, and the AI can transcribe it, explain it step-by-step, or translate it into another language.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:var(--accent-primary);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                            </div>
+                            <h3>Image Generation</h3>
+                            <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">(Text-to-Image)</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:var(--accent-primary);">Image Generation</h3>
+                            <p>AI can create original visuals from text descriptions. This is invaluable for creating highly specific visual supports, social stories, or presentation graphics without endless searching.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div class="card-icon" style="color:var(--accent-secondary);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                            </div>
+                            <h3>Audio & Voice</h3>
+                            <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">(Text-to-Audio / Audio-to-Text)</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:var(--accent-secondary);">Audio & Voice</h3>
+                            <p>AI can generate natural, conversational audio from text, or transcribe spoken audio into structured notes. This bridges the gap for auditory learners and supports executive functioning.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="7">
+            <div class="subtitle">Universal Design for Learning</div>
+            <h2>Multimodal AI & Differentiation</h2>
+            <p class="large" style="margin-bottom: 2rem;">Click the cards below to reveal how specific tools map to the UDL framework.</p>
+
+            <div class="grid-3">
+                <!-- UDL Card 1 -->
+                <div class="udl-card" onclick="this.classList.toggle('expanded')" style="border-top: 4px solid var(--accent-purple);">
+                    <div class="udl-card-header">
+                        <h4 style="color: var(--accent-purple);">Multiple Means of Representation</h4>
+                        <p style="color: var(--text-main);"><i>The "What" of Learning.</i> Offer information in more than one format.</p>
+                        <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem; text-transform: uppercase;">Click to view tool alignments ▼</div>
+                    </div>
+                    <div class="udl-alignments">
+                        <div class="udl-bullet"><strong>NotebookLM:</strong> Convert dense PDF textbook chapters into conversational 10-minute Audio Podcasts.</div>
+                        <div class="udl-bullet"><strong>Firefly:</strong> Generate customized visual schedules, social stories, and historical scene depictions.</div>
+                        <div class="udl-bullet"><strong>Copilot:</strong> Create bilingual vocabulary tables with visual descriptors for EAL learners.</div>
+                    </div>
+                </div>
+
+                <!-- UDL Card 2 -->
+                <div class="udl-card" onclick="this.classList.toggle('expanded')" style="border-top: 4px solid var(--accent-primary);">
+                    <div class="udl-card-header">
+                        <h4 style="color: var(--accent-primary);">Multiple Means of Action & Expression</h4>
+                        <p style="color: var(--text-main);"><i>The "How" of Learning.</i> Provide learners alternative ways to interact.</p>
+                        <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem; text-transform: uppercase;">Click to view tool alignments ▼</div>
+                    </div>
+                    <div class="udl-alignments">
+                        <div class="udl-bullet"><strong>Gemini:</strong> Generate leveled sentence frames and paragraph starters tailored to specific reading levels.</div>
+                        <div class="udl-bullet"><strong>Copilot:</strong> Design alternative assessment rubrics (e.g., assessing a student podcast or visual model).</div>
+                        <div class="udl-bullet"><strong>AI Agents:</strong> Create interactive, custom graphic organizers that structure student thinking prior to output.</div>
+                    </div>
+                </div>
+
+                <!-- UDL Card 3 -->
+                <div class="udl-card" onclick="this.classList.toggle('expanded')" style="border-top: 4px solid var(--accent-secondary);">
+                    <div class="udl-card-header">
+                        <h4 style="color: var(--accent-secondary);">Multiple Means of Engagement</h4>
+                        <p style="color: var(--text-main);"><i>The "Why" of Learning.</i> Tap into learners' interests and motivation.</p>
+                        <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem; text-transform: uppercase;">Click to view tool alignments ▼</div>
+                    </div>
+                    <div class="udl-alignments">
+                        <div class="udl-bullet"><strong>Gemini:</strong> Rewrite word problems to feature a student's specific hyper-fixation (e.g., Minecraft, transit).</div>
+                        <div class="udl-bullet"><strong>NotebookLM:</strong> Provide students with a curated "AI Tutor" notebook containing only approved sources.</div>
+                        <div class="udl-bullet"><strong>Copilot:</strong> Generate real-world roleplay scenarios that make abstract concepts immediately relevant.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 8: RESEARCH & RAG                  -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="8">
+            <div class="subtitle">Research & Synthesis</div>
+            <h2>Retrieval-Augmented Generation (RAG)</h2>
+            <div class="card-base" style="margin-top: 1rem; border-left: 6px solid var(--accent-primary);">
+                <h3 style="font-size: 1.8rem; margin-bottom: 1rem;">Solving Hallucinations with NotebookLM</h3>
+                <p class="large" style="font-size: 1.2rem;">Unlike standard chat models which search the entire open web, <b>RAG tools only read the documents you explicitly upload.</b> By restricting the AI's knowledge base to your trusted sources, RAG effectively eliminates hallucination.</p>
+                
+                <h4 style="margin-top: 2rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-size: 1rem;">Best Use Cases for EIPS (Click to explore)</h4>
+                
+                <div class="grid-2" style="margin-top: 1rem; gap: 1rem;">
+                    <!-- Use Case 1 -->
+                    <div class="flip-card short" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="card-icon" style="color: var(--accent-warning);">
+                                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                                </div>
+                                <h3>Policy Querying</h3>
+                            </div>
+                            <div class="flip-card-back">
+                                <h3 style="color: var(--accent-warning);">Policy Querying</h3>
+                                <p>Upload relevant Division Policies (e.g., AP 142, AP 350) to query specific administrative procedures securely and safely without hallucinations.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Use Case 2 -->
+                    <div class="flip-card short" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="card-icon" style="color: var(--accent-primary);">
+                                    <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                                </div>
+                                <h3>Data Analysis</h3>
+                            </div>
+                            <div class="flip-card-back">
+                                <h3 style="color: var(--accent-primary);">Data Analysis</h3>
+                                <p>Synthesize multiple de-identified assessments or survey results to look for overarching trend data and identify gaps in understanding.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Use Case 3 -->
+                    <div class="flip-card short" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="card-icon" style="color: var(--accent-secondary);">
+                                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                                </div>
+                                <h3>Academic Synthesis</h3>
+                            </div>
+                            <div class="flip-card-back">
+                                <h3 style="color: var(--accent-secondary);">Academic Synthesis</h3>
+                                <p>Upload dense academic PDFs and have the AI generate accessible study guides, FAQs, or concise cited briefings for busy educators.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Use Case 4 -->
+                    <div class="flip-card short" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="card-icon" style="color: var(--accent-purple);">
+                                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>
+                                </div>
+                                <h3>NotebookLM Studio</h3>
+                            </div>
+                            <div class="flip-card-back">
+                                <h3 style="color: var(--accent-purple);">NotebookLM Studio</h3>
+                                <p>Use the integrated Studio tool to actively compile quotes, notes, and AI-generated summaries from your documents into cohesive master research briefings.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="8">
+            <div class="subtitle">Live Demo Procedure</div>
+            <h2>Building a NotebookLM Podcast</h2>
+            <p class="large" style="margin-bottom: 2rem;">Transforming static PDFs into engaging auditory resources.</p>
+            
+            <ol class="procedure-list">
+                <li><b>Create a New Notebook:</b> Open NotebookLM (via Google Workspace) and click "New Notebook".</li>
+                <li><b>Populate with Sources:</b> Upload your relevant PDFs, Google Docs, or paste website URLs (e.g., a chapter on cell biology).</li>
+                <li><b>Query the Source (RAG):</b> Use the chat interface to ask questions. <i>(e.g., "Summarize the three main functions of the mitochondria based ONLY on the uploaded docs.")</i></li>
+                <li><b>Generate Audio Overview:</b> Click the "Audio Overview" generation button. The AI will create a natural-sounding podcast discussing your materials.</li>
+            </ol>
+        </div>
+
+        <div class="slide" data-chapter="8">
+            <div class="subtitle">Advanced Research</div>
+            <h2>Deep Research Agents</h2>
+            <p class="large">Moving from instant answers to autonomous, multi-step web research.</p>
+            
+            <div class="prompt-engine">
+                <div class="prompt-header">
+                    <div class="prompt-tabs">
+                        <button class="prompt-tab tab-weak active" onclick="switchTab(this, 4, 'weak')">Weak</button>
+                        <button class="prompt-tab tab-adequate" onclick="switchTab(this, 4, 'adequate')">Adequate</button>
+                        <button class="prompt-tab tab-strong" onclick="switchTab(this, 4, 'strong')">Strong (4P)</button>
+                    </div>
+                    <button class="copy-btn" onclick="copyPrompt(4)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy
+                    </button>
+                </div>
+                <div class="prompt-body">
+                    <div id="content-4-weak" class="prompt-content active">Find research on cellphones in schools.</div>
+                    <div id="content-4-adequate" class="prompt-content">Find recent academic studies from the last 3 years about the impact of smartphone bans on middle school student mental health and grades.</div>
+                    <div id="content-4-strong" class="prompt-content"><span class="hl-prepare">[Prepare] I am a school division administrator looking to draft a new policy on personal devices. I need a comprehensive overview of recent literature.</span> 
+<span class="hl-prime">[Prime] Focus specifically on peer-reviewed data from 2022-2026 covering North American and European school districts regarding Middle School (Grades 6-9).</span> 
+<span class="hl-partner">[Partner] Conduct a deep research sweep across academic databases. Synthesize the findings into three distinct categories: Academic Impact, Social-Emotional Impact, and Implementation Challenges.</span> 
+<span class="hl-polish">[Polish] Format as a formal briefing note. Include a specific section highlighting any dissenting studies or negative impacts of bans. Provide full citations for all sources so I can verify them.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 9: VIBE CODING & AGENTS            -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="9">
+            <div class="subtitle">System Automation</div>
+            <h2>What is "Vibe Coding and Agents"?</h2>
+            <div class="card-base" style="margin-top: 2rem;">
+                <p class="large" style="color: var(--text-main);">The practice of interacting with AI using natural language to generate, debug, and deploy computer code <b>without needing to know traditional programming syntax.</b></p>
+                <br>
+                <p style="color: var(--text-muted); font-size: 1.2rem;">You provide the "vibe" (the human intent, logic, and workflow).<br>The AI acts as the translator, writing the script to execute it.</p>
+                <br>
+                <div class="grid-2" style="margin-top:0;">
+                    <div style="background:#0D1117; padding:1.5rem; border-radius:8px;">
+                        <h4 style="color:var(--accent-secondary); margin-bottom:0.5rem;">Old Paradigm</h4>
+                        <p style="color:var(--text-muted); font-family:monospace; font-size:0.95rem;">Learn to Code ➔ Open Complex Software ➔ Type Code by Hand ➔ Fix Breaking Errors ➔ Deploy</p>
+                    </div>
+                    <div style="background:#0D1117; padding:1.5rem; border-radius:8px;">
+                        <h4 style="color:var(--accent-primary); margin-bottom:0.5rem;">New Paradigm</h4>
+                        <p style="color:var(--text-muted); font-family:monospace; font-size:0.95rem;">Describe What You Want ➔ AI Translates to Code ➔ AI Fixes Any Bugs ➔ Deploy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="9">
+            <div class="subtitle">Interactive Builder</div>
+            <h2>Google Apps Script Workflow</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">Drag components to build the logic. An explanation will appear below.</p>
+            
+            <div class="workflow-board">
+                <!-- Draggables -->
+                <div class="draggables-sidebar" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <div class="drag-item" draggable="true" id="item1" data-type="trigger" ondragstart="drag(event)">Google Form Submitted</div>
+                    <div class="drag-item" draggable="true" id="item2" data-type="ai" ondragstart="drag(event)">Script Reads Spreadsheet row</div>
+                    <div class="drag-item" draggable="true" id="item3" data-type="action" ondragstart="drag(event)">Auto-Email specific teacher</div>
+                </div>
+
+                <!-- Drop Zones -->
+                <div class="drop-zones">
+                    <div class="drop-zone" id="zone1" ondragover="allowDrop(event)" ondrop="drop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <span class="step-num">Step 1: Trigger</span>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="drop-zone" id="zone2" ondragover="allowDrop(event)" ondrop="drop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <span class="step-num">Step 2: Logic</span>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="drop-zone" id="zone3" ondragover="allowDrop(event)" ondrop="drop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <span class="step-num">Step 3: Action</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Inline Explanation Box (Replaces Toast) -->
+            <div id="workflow-explanation">
+                <div class="expl-icon">✨</div>
+                <div class="expl-text-container">
+                    <div class="expl-title" id="expl-title">Drop an item above</div>
+                    <div class="expl-desc" id="expl-desc">Build a workflow to see how the logic operates.</div>
+                </div>
+            </div>
+
+            <div id="success-message" style="display: none; text-align: center; margin-top: 1rem; color: var(--accent-secondary); font-weight: bold; font-size: 1.2rem;">
+                Logic Complete! Now we use a prompt to generate the Apps Script.
+            </div>
+        </div>
+
+        <div class="slide" data-chapter="9">
+            <div class="subtitle">Vibe Coding and Agents Demo</div>
+            <h2>Generating the Script</h2>
+            
+            <div class="prompt-engine">
+                <div class="prompt-header">
+                    <div class="prompt-tabs">
+                        <button class="prompt-tab tab-weak active" onclick="switchTab(this, 5, 'weak')">Weak</button>
+                        <button class="prompt-tab tab-adequate" onclick="switchTab(this, 5, 'adequate')">Adequate</button>
+                        <button class="prompt-tab tab-strong" onclick="switchTab(this, 5, 'strong')">Strong (4P)</button>
+                    </div>
+                    <button class="copy-btn" onclick="copyPrompt(5)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy
+                    </button>
+                </div>
+                <div class="prompt-body">
+                    <div id="content-5-weak" class="prompt-content active">Write a script to email parents from a spreadsheet.</div>
+                    <div id="content-5-adequate" class="prompt-content">Write a Google Apps Script that reads column A for emails and column B for names, and sends them an email when I run the script.</div>
+                    <div id="content-5-strong" class="prompt-content"><span class="hl-prepare">[Prepare] Act as an expert Google Apps Script developer. I need to automate a repetitive email task.</span> 
+<span class="hl-prime">[Prime] I have a Google Sheet named 'Field Trip' with the following columns: A (Student Name), B (Parent Email), C (Paid Status - Yes/No).</span> 
+<span class="hl-partner">[Partner] Write a script that creates a custom menu in Sheets called 'Automations' with a button 'Send Reminders'. When clicked, it should check column C. If it says 'No', send a polite reminder email to the address in column B addressing the parent by name.</span> 
+<span class="hl-polish">[Polish] Provide the exact code. More importantly, include step-by-step instructions for a beginner on how to paste this into Apps Script, authorize it, and run it safely in a testing environment first.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 10: ORCHESTRATING AI               -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="10">
+            <div class="subtitle">Putting It All Together</div>
+            <h2>The Ultimate Workflow: Orchestrating AI</h2>
+            <p class="large" style="margin-bottom: 2rem;">Chaining specific tools together to build a complete interactive presentation.</p>
+            
+            <div class="orchestration-flow">
+                <!-- Node 1 -->
+                <div class="orchestration-node" style="border-color: var(--accent-warning);">
+                    <div class="orch-icon" style="color: var(--accent-warning);">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                    </div>
+                    <div class="orch-title">1. Research Base</div>
+                    <div class="orch-desc">Run Deep Research in <b>NotebookLM</b> and upload resources to create a grounded knowledge base.</div>
+                </div>
+                
+                <div class="orchestration-arrow">➔</div>
+                
+                <!-- Node 2 -->
+                <div class="orchestration-node" style="border-color: var(--accent-primary);">
+                    <div class="orch-icon" style="color: var(--accent-primary);">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+                    </div>
+                    <div class="orch-title">2. Co-Edit Draft</div>
+                    <div class="orch-desc">Connect Notebook to <b>Gemini</b>. Use 4P to draft the presentation script in <b>Canvas</b>, then collaboratively edit.</div>
+                </div>
+                
+                <div class="orchestration-arrow">➔</div>
+                
+                <!-- Node 3 -->
+                <div class="orchestration-node" style="border-color: var(--accent-secondary);">
+                    <div class="orch-icon" style="color: var(--accent-secondary);">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <div class="orch-title">3. Code the App</div>
+                    <div class="orch-desc">Move the script to a new <b>Gemini</b> chat. Use <b>Canvas</b> to generate and debug an interactive HTML presentation.</div>
+                </div>
+                
+                <div class="orchestration-arrow">➔</div>
+
+                <!-- Node 4 -->
+                <div class="orchestration-node" style="border-color: var(--accent-purple);">
+                    <div class="orch-icon" style="color: var(--accent-purple);">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    </div>
+                    <div class="orch-title">4. Generate Assets</div>
+                    <div class="orch-desc">Prompt <b>Gemini</b> to generate custom, highly relevant images and structured data tables to enhance the UI.</div>
+                </div>
+                
+                <div class="orchestration-arrow">➔</div>
+                
+                <!-- Node 5 -->
+                <div class="orchestration-node" style="border-color: var(--accent-danger);">
+                    <div class="orch-icon" style="color: var(--accent-danger);">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                    </div>
+                    <div class="orch-title">5. Audio Integration</div>
+                    <div class="orch-desc">Upload final script into <b>NotebookLM</b> to generate an Audio Podcast overview, then embed it into the HTML.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- CHAPTER 11: NEXT STEPS                     -->
+        <!-- ========================================== -->
+
+        <div class="slide" data-chapter="11">
+            <div class="subtitle">Your Action Plan</div>
+            <h2>Next Steps</h2>
+            <p class="large">Choose your entry point. Click to reveal your challenges for this week.</p>
+            
+            <div class="grid-3">
+                <!-- Beginner -->
+                <div class="flip-card tall" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front beginner">
+                            <div class="card-icon" style="color:var(--accent-secondary);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                            </div>
+                            <h3 style="color:var(--accent-secondary);">Beginner</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:var(--accent-secondary);">The 4P Challenges</h3>
+                            <ul class="ul-steps">
+                                <li>Use the 4P framework to draft one detailed parent communication.</li>
+                                <li>Ask Gemini to simplify a complex textbook paragraph for a struggling reader.</li>
+                                <li>Brainstorm 5 highly-engaging lesson hooks for an upcoming unit.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Intermediate -->
+                <div class="flip-card tall" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front intermediate">
+                            <div class="card-icon" style="color:var(--accent-warning);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                            </div>
+                            <h3 style="color:var(--accent-warning);">Intermediate</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:var(--accent-warning);">The RAG Challenges</h3>
+                            <ul class="ul-steps">
+                                <li>Upload a dense Division policy to NotebookLM and query it for key takeaways.</li>
+                                <li>Generate an Audio Podcast from a curriculum document to listen to on your commute.</li>
+                                <li>Create a highly customized, competency-based rubric with Copilot.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced -->
+                <div class="flip-card tall" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front advanced">
+                            <div class="card-icon" style="color:var(--accent-danger);">
+                                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                            </div>
+                            <h3 style="color:var(--accent-danger);">Advanced</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3 style="color:var(--accent-danger);">The Automation Challenges</h3>
+                            <ul class="ul-steps">
+                                <li>Map out a 3-step automation workflow for a repetitive daily task.</li>
+                                <li>Use "Vibe Coding" to generate a working Google Apps Script.</li>
+                                <li>Create a NotebookLM Studio briefing synthesizing 5+ academic PDFs.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h1 style="text-align: center; margin-top: 4rem; font-size: 3rem;">Q & A</h1>
+        </div>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // SLIDE NAVIGATION LOGIC
+        // ==========================================
+        const slides = document.querySelectorAll('.slide');
+        const counter = document.getElementById('slide-counter');
+        const navContainer = document.getElementById('nav-items-container');
+        let currentSlide = 0;
+
+        const chapters = [
+            { id: 1, title: "Agenda" },
+            { id: 2, title: "The Landscape" },
+            { id: 3, title: "Governance & AP 142" },
+            { id: 4, title: "Approved Tools" },
+            { id: 5, title: "The 4P Framework" },
+            { id: 6, title: "Live Demos" },
+            { id: 7, title: "Multimodal & UDL" },
+            { id: 8, title: "Research & RAG" },
+            { id: 9, title: "Vibe Coding & Agents" },
+            { id: 10, title: "Orchestrating AI" },
+            { id: 11, title: "Next Steps" }
+        ];
+
+        // Build Navigation Menu
+        chapters.forEach(chap => {
+            const div = document.createElement('div');
+            div.className = 'nav-item';
+            div.dataset.chapterId = chap.id;
+            div.innerText = chap.title;
+            div.onclick = () => jumpToChapter(chap.id);
+            navContainer.appendChild(div);
+        });
+
+        function updateUI() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) slide.classList.add('active');
+                else slide.classList.remove('active');
+            });
+
+            counter.innerText = `${currentSlide + 1}/${slides.length}`;
+
+            const activeChapter = slides[currentSlide].dataset.chapter;
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.dataset.chapterId === activeChapter) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+            
+            const activeNav = document.querySelector('.nav-item.active');
+            if (activeNav) activeNav.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; updateUI(); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateUI(); } }
+
+        function jumpToChapter(chapterId) {
+            const targetIndex = Array.from(slides).findIndex(slide => slide.dataset.chapter == chapterId);
+            if (targetIndex !== -1) { currentSlide = targetIndex; updateUI(); }
+        }
+
+        // Keyboard Event Listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
+
+        updateUI();
+
+        // ==========================================
+        // TAB LOGIC (PROMPT ENGINES)
+        // ==========================================
+        function switchTab(btn, demoNum, level) {
+            const engine = btn.closest('.prompt-engine');
+            engine.querySelectorAll('.prompt-tab').forEach(t => t.classList.remove('active'));
+            engine.querySelectorAll('.prompt-content').forEach(c => c.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(`content-${demoNum}-${level}`).classList.add('active');
+        }
+
+        // ==========================================
+        // COPY TO CLIPBOARD LOGIC
+        // ==========================================
+        function copyPrompt(demoNum) {
+            const weakContent = document.querySelector(`#content-${demoNum}-weak`);
+            if(!weakContent) return; // safety check
+            
+            const activeContent = weakContent.parentElement.querySelector('.prompt-content.active');
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = activeContent.innerHTML;
+            const textToCopy = tempDiv.textContent || tempDiv.innerText || "";
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const btn = activeContent.closest('.prompt-engine').querySelector('.copy-btn');
+                const originalText = btn.innerHTML;
+                
+                btn.classList.add('copied');
+                btn.innerHTML = '✓ Copied!';
+                
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        // ==========================================
+        // DRAG AND DROP & INLINE EXPLANATION LOGIC
+        // ==========================================
+        let draggedItem = null;
+
+        function drag(ev) {
+            draggedItem = ev.target;
+            ev.dataTransfer.setData("text", ev.target.id);
+            setTimeout(() => ev.target.style.opacity = "0.5", 0);
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            if(ev.target.classList.contains('drop-zone') && !ev.target.hasChildNodes()) {
+                ev.target.classList.add('drag-over');
+            }
+        }
+
+        function dragLeave(ev) { ev.target.classList.remove('drag-over'); }
+
+        function drop(ev) {
+            ev.preventDefault();
+            if (!draggedItem) return;
+            draggedItem.style.opacity = "1";
+            
+            let targetZone = ev.target;
+            if(targetZone.classList.contains('step-num')) targetZone = targetZone.parentElement;
+
+            if (targetZone.classList.contains('drop-zone')) {
+                targetZone.classList.remove('drag-over');
+                const stepSpan = targetZone.querySelector('.step-num');
+                targetZone.innerHTML = ''; 
+                if(stepSpan) targetZone.appendChild(stepSpan);
+                
+                targetZone.appendChild(draggedItem);
+                targetZone.classList.add('filled');
+                
+                showExplanation(draggedItem.dataset.type);
+                checkWorkflowComplete();
+                
+            } else if (targetZone.classList.contains('draggables-sidebar')) {
+                 targetZone.appendChild(draggedItem);
+                 document.querySelectorAll('.drop-zone').forEach(zone => {
+                     if(zone.children.length <= 1) zone.classList.remove('filled');
+                 });
+                 checkWorkflowComplete();
+            }
+        }
+
+        function showExplanation(type) {
+            const explanationBox = document.getElementById('workflow-explanation');
+            const title = document.getElementById('expl-title');
+            const desc = document.getElementById('expl-desc');
+            
+            if(type === 'trigger') {
+                title.innerText = 'Step 1: The Trigger';
+                title.style.color = 'var(--accent-warning)';
+                desc.innerHTML = 'The script listens for a specific event (like a Form submission or a timer) to wake up and start executing the workflow.';
+            }
+            if(type === 'ai') {
+                title.innerText = 'Step 2: The Logic';
+                title.style.color = 'var(--accent-primary)';
+                desc.innerHTML = 'The script pulls the data (e.g. from the new spreadsheet row) and processes it. This could involve passing it to an AI model to evaluate or summarize.';
+            }
+            if(type === 'action') {
+                title.innerText = 'Step 3: The Action';
+                title.style.color = 'var(--accent-secondary)';
+                desc.innerHTML = 'Based on the logic executed in Step 2, the script performs a final task, like dispatching an automated email or creating a calendar event.';
+            }
+            
+            explanationBox.classList.add('show');
+        }
+
+        function checkWorkflowComplete() {
+            const z1 = document.getElementById('zone1').querySelector('[data-type="trigger"]');
+            const z2 = document.getElementById('zone2').querySelector('[data-type="ai"]');
+            const z3 = document.getElementById('zone3').querySelector('[data-type="action"]');
+            
+            document.getElementById('success-message').style.display = (z1 && z2 && z3) ? 'block' : 'none';
+        }
+
+        document.querySelector('.draggables-sidebar').addEventListener('dragover', allowDrop);
+        document.querySelector('.draggables-sidebar').addEventListener('drop', drop);
+        document.addEventListener('dragend', function() { if(draggedItem) { draggedItem.style.opacity = "1"; draggedItem = null; }});
+
+    </script>
+</body>
+</html>
