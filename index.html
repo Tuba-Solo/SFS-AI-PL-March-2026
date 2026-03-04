@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generative AI Integration | EIPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- PDF.js Library for Inline PDF Rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
     <style>
         :root {
             --bg-base: #0B0F19;
@@ -326,52 +331,49 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        #workflow-explanation.show {
-            opacity: 1;
-        }
+        #workflow-explanation.show { opacity: 1; }
         .expl-icon { font-size: 3rem; }
         .expl-text-container { text-align: left; }
         .expl-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;}
         .expl-desc { font-size: 1.15rem; color: var(--text-muted); line-height: 1.5; }
 
-        /* Fullscreen Viewers for Media/PDFs */
-        .fs-container { position: relative; transition: all 0.3s ease; }
-        .fs-container.pseudo-fullscreen {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 99999 !important;
-            background: rgba(6, 9, 15, 0.98) !important;
-            backdrop-filter: blur(5px);
-            padding: 2.5rem !important;
-            margin: 0 !important;
-            border-radius: 0 !important;
-            border: none !important;
+        /* Native Fullscreen Styles */
+        :fullscreen {
+            background-color: var(--bg-base) !important;
             display: flex !important;
+            flex-direction: column;
             align-items: center !important;
             justify-content: center !important;
+            padding: 2rem !important;
+            border: none !important;
         }
-        .fs-container.pseudo-fullscreen object,
-        .fs-container.pseudo-fullscreen img {
-            width: 100% !important;
-            height: 100% !important;
-            max-width: 100% !important;
-            max-height: 100% !important;
-            object-fit: contain !important;
+        :-webkit-full-screen {
+            background-color: var(--bg-base) !important;
+            display: flex !important;
+            flex-direction: column;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 2rem !important;
+            border: none !important;
+        }
+        :fullscreen img, :-webkit-full-screen img {
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            object-fit: contain;
         }
         
-        .fs-expand-btn { display: flex; }
-        .fs-container.pseudo-fullscreen .fs-expand-btn { display: none !important; }
-        
+        /* Hide expand button inside fullscreen */
+        :fullscreen .fs-expand-btn { display: none !important; }
+        :-webkit-full-screen .fs-expand-btn { display: none !important; }
+
+        /* Display close button ONLY inside fullscreen */
         .fs-close-btn { display: none; }
-        .fs-container.pseudo-fullscreen .fs-close-btn {
+        :fullscreen .fs-close-btn {
             display: flex !important;
             position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            z-index: 100000;
+            top: 2rem;
+            right: 2rem;
+            z-index: 10000;
             background: rgba(239, 68, 68, 0.15);
             color: var(--accent-danger);
             border: 2px solid var(--accent-danger);
@@ -384,10 +386,32 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .fs-container.pseudo-fullscreen .fs-close-btn:hover {
+        :-webkit-full-screen .fs-close-btn {
+            display: flex !important;
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            z-index: 10000;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+            border: 2px solid var(--accent-danger);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .fs-close-btn:hover {
             background: var(--accent-danger);
             color: white;
         }
+
+        /* Specific overrides for PDF viewer in fullscreen to maintain layout */
+        :fullscreen #pdf-fs { padding: 0 !important; width: 100%; height: 100%; max-width: 1200px; }
+        :-webkit-full-screen #pdf-fs { padding: 0 !important; width: 100%; height: 100%; max-width: 1200px; }
 
         /* Misc Utilities */
         .stat-card { text-align: center; }
@@ -1087,12 +1111,12 @@
             <h2 style="flex-shrink: 0; margin-bottom: 1rem;">Infographic & Audio Overview</h2>
             
             <div style="display: flex; flex-direction: column; gap: 1rem; flex: 1; min-height: 0; width: 100%;">
-                <div class="card-base fs-container" id="info-fs" style="flex: 1; min-height: 0; padding: 0.5rem; border: 2px solid #30363D; overflow: hidden; display: flex; justify-content: center; background: #0D1117; cursor: pointer;" onclick="if(!this.classList.contains('pseudo-fullscreen')) toggleFS('info-fs')">
+                <div class="card-base" id="info-fs" style="flex: 1; min-height: 0; padding: 0.5rem; border: 2px solid #30363D; overflow: hidden; display: flex; justify-content: center; background: #0D1117; cursor: pointer; position: relative;" onclick="toggleNativeFS('info-fs')">
                     <div class="fs-expand-btn" style="position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.8); color: var(--text-main); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; pointer-events: none; border: 1px solid #30363D; z-index: 10;">
                         <svg class="svg-icon" style="width: 1rem; height: 1rem; margin-right: 0.4rem; vertical-align: middle;" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                         Click to Expand
                     </div>
-                    <button class="fs-close-btn" onclick="event.stopPropagation(); toggleFS('info-fs')">×</button>
+                    <button class="fs-close-btn" onclick="event.stopPropagation(); toggleNativeFS('info-fs')">×</button>
                     <img src="SFS_AI_INFOGRAPHIC.png" alt="Generated Infographic" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.95;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%234B5563\' stroke-width=\'1\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\' ry=\'2\'/><circle cx=\'8.5\' cy=\'8.5\' r=\'1.5\'/><polyline points=\'21 15 16 10 5 21\'/></svg>'">
                 </div>
                 <div class="card-base" style="flex-shrink: 0; border-top: 4px solid var(--accent-secondary); padding: 1rem 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
@@ -1119,18 +1143,41 @@
             <p class="large" style="margin-bottom: 1.5rem; flex-shrink: 0;">A fully formatted presentation generated directly from the research and synthesized notes.</p>
             
             <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; width: 100%;">
-                <div class="card-base fs-container" id="pdf-fs" style="flex: 1; padding: 0; border: 2px solid #30363D; overflow: hidden; background: #0D1117;">
-                    <button class="fs-expand-btn copy-btn" onclick="toggleFS('pdf-fs')" style="position: absolute; top: 1rem; right: 1rem; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
-                        <svg class="svg-icon" style="width: 1rem; height: 1rem;" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-                        Fullscreen View
-                    </button>
-                    <button class="fs-close-btn" onclick="toggleFS('pdf-fs')">×</button>
-                    <object data="EIPS_AI_Blueprint.pdf" type="application/pdf" width="100%" height="100%" style="border: none; display: block;">
-                        <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
-                            <p>This browser does not support inline PDFs.</p>
-                            <a href="EIPS_AI_Blueprint.pdf" target="_blank" style="color: var(--accent-primary); text-decoration: underline;">Click here to download the PDF</a>
+                <div class="card-base" id="pdf-fs" style="flex: 1; padding: 0; border: 2px solid #30363D; overflow: hidden; background: #0D1117; display: flex; flex-direction: column; position: relative;">
+                    <!-- Custom PDF Viewer Controls -->
+                    <div style="background: #161B22; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363D; z-index: 2;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="copy-btn" onclick="onPrevPage()">
+                                <svg class="svg-icon" style="width: 1rem; height: 1rem;" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                                Prev Slide
+                            </button>
+                            <button class="copy-btn" onclick="onNextPage()">
+                                Next Slide
+                                <svg class="svg-icon" style="width: 1rem; height: 1rem;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
                         </div>
-                    </object>
+                        <span id="page_num" style="font-family: 'Fira Code', monospace; color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">Slide - / -</span>
+                        <button class="copy-btn fs-expand-btn" onclick="toggleNativeFS('pdf-fs')">
+                            <svg class="svg-icon" style="width: 1rem; height: 1rem;" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                            Fullscreen View
+                        </button>
+                        <button class="copy-btn fs-close-btn" onclick="toggleNativeFS('pdf-fs')" style="display: none;">
+                            Close Fullscreen
+                        </button>
+                    </div>
+                    
+                    <!-- Canvas Container -->
+                    <div style="flex: 1; overflow: auto; display: flex; justify-content: center; align-items: center; background: #06090F; position: relative;" id="pdf-canvas-container">
+                        <canvas id="the-canvas" style="max-width: 100%; max-height: 100%; object-fit: contain;"></canvas>
+                        
+                        <!-- Fallback Error UI if local files block PDF.js -->
+                        <div id="pdf-error" style="display: none; position: absolute; inset: 0; background: #0D1117; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; z-index: 10;">
+                            <svg class="svg-icon" style="color: var(--accent-warning); width: 3rem; height: 3rem; margin-bottom: 1rem;" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                            <p style="color: var(--text-main); font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">Local File Security Restriction</p>
+                            <p style="color: var(--text-muted); max-width: 500px; margin-bottom: 1.5rem; line-height: 1.5;">Browsers prevent reading local PDF files via scripts for security reasons. To view this inline, run the presentation on a local web server (like VSCode Live Server), or click below to open it natively.</p>
+                            <a href="EIPS_AI_Blueprint.pdf" target="_blank" style="background: var(--accent-primary); color: white; padding: 0.8rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: bold; transition: opacity 0.2s;">Open PDF Native Viewer</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1461,7 +1508,8 @@
         document.addEventListener('keydown', (e) => {
             // Allow escape to close fullscreens
             if (e.key === 'Escape') {
-                document.querySelectorAll('.pseudo-fullscreen').forEach(el => el.classList.remove('pseudo-fullscreen'));
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
                 return;
             }
             
@@ -1520,13 +1568,114 @@
         }
 
         // ==========================================
-        // PSEUDO FULLSCREEN LOGIC (IMAGES & PDFS)
+        // NATIVE FULLSCREEN LOGIC (IMAGES & PDFS)
         // ==========================================
-        function toggleFS(id) {
-            const el = document.getElementById(id);
-            if (el) {
-                el.classList.toggle('pseudo-fullscreen');
+        function toggleNativeFS(id) {
+            const elem = document.getElementById(id);
+            if (!elem) return;
+
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => console.log(err));
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
             }
+        }
+
+        // Hide "Close Fullscreen" button when user presses ESC to leave fullscreen natively
+        document.addEventListener('fullscreenchange', (event) => {
+            const fsBtn = document.querySelector(':fullscreen .fs-close-btn');
+            const hiddenBtns = document.querySelectorAll('.fs-close-btn');
+            if(!document.fullscreenElement) {
+                hiddenBtns.forEach(btn => btn.style.display = 'none');
+            } else if (fsBtn) {
+                fsBtn.style.display = 'flex';
+            }
+        });
+
+        // ==========================================
+        // PDF.JS INLINE RENDERING LOGIC
+        // ==========================================
+        let pdfDoc = null,
+            pageNum = 1,
+            pageIsRendering = false,
+            pageNumPending = null;
+
+        const canvas = document.getElementById('the-canvas');
+        const ctx = canvas ? canvas.getContext('2d') : null;
+
+        function renderPage(num) {
+            if(!pdfDoc || !canvas) return;
+            pageIsRendering = true;
+            
+            pdfDoc.getPage(num).then(page => {
+                // Set scale high for crisp text on larger displays
+                const viewport = page.getViewport({ scale: 2.5 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderCtx = { canvasContext: ctx, viewport: viewport };
+                page.render(renderCtx).promise.then(() => {
+                    pageIsRendering = false;
+                    if (pageNumPending !== null) {
+                        renderPage(pageNumPending);
+                        pageNumPending = null;
+                    }
+                });
+                
+                const pageNumDisplay = document.getElementById('page_num');
+                if(pageNumDisplay) pageNumDisplay.textContent = `Slide ${num} / ${pdfDoc.numPages}`;
+            });
+        }
+
+        function queueRenderPage(num) {
+            if (pageIsRendering) { pageNumPending = num; } 
+            else { renderPage(num); }
+        }
+
+        function onPrevPage() {
+            if (pageNum <= 1) return;
+            pageNum--;
+            queueRenderPage(pageNum);
+        }
+
+        function onNextPage() {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            queueRenderPage(pageNum);
+        }
+
+        // Load the PDF once window loads
+        window.addEventListener('load', () => {
+            if(typeof pdfjsLib !== 'undefined') {
+                const pdfUrl = 'EIPS_AI_Blueprint.pdf';
+                // Attempt to load the PDF directly using pdfjsLib
+                pdfjsLib.getDocument(pdfUrl).promise.then(pdfDoc_ => {
+                    pdfDoc = pdfDoc_;
+                    renderPage(pageNum);
+                }).catch(err => {
+                    console.error("PDF.js direct load failed.", err);
+                    showPdfError();
+                });
+            }
+        });
+
+        function showPdfError() {
+            const errUi = document.getElementById('pdf-error');
+            const canvasUi = document.getElementById('the-canvas');
+            if(errUi) errUi.style.display = 'flex';
+            if(canvasUi) canvasUi.style.display = 'none';
         }
 
         // ==========================================
